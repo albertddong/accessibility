@@ -81,6 +81,8 @@ def begin_google_oauth(session: dict) -> str | None:
         prompt="consent",
     )
     session["google_oauth_state"] = state
+    if getattr(flow, "code_verifier", None):
+        session["google_code_verifier"] = flow.code_verifier
     ensure_session_id(session)
     return authorization_url
 
@@ -91,10 +93,14 @@ def complete_google_oauth(session: dict, authorization_response: str) -> None:
         raise ValueError("Missing OAuth state in session.")
 
     flow = _build_flow(expected_state)
+    code_verifier = session.get("google_code_verifier")
+    if code_verifier:
+        flow.code_verifier = code_verifier
     flow.fetch_token(authorization_response=authorization_response)
     TOKEN_STORE[ensure_session_id(session)] = credentials_to_dict(flow.credentials)
     session["google_connected"] = True
     session.pop("google_oauth_state", None)
+    session.pop("google_code_verifier", None)
 
 
 def get_google_credentials(session: dict):
