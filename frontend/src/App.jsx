@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const ANALYSIS_STORAGE_KEY = "accessibility-rem-analysis";
+const USAGE_STORAGE_KEY = "accessibility-rem-usage";
+const DOC_RESULT_STORAGE_KEY = "accessibility-rem-doc-result";
 
 function formatConfidence(value) {
   if (typeof value !== "number") return null;
@@ -40,6 +43,52 @@ function App() {
     window.history.scrollRestoration = "manual";
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
+
+  useEffect(() => {
+    try {
+      const savedAnalysis = window.sessionStorage.getItem(ANALYSIS_STORAGE_KEY);
+      const savedUsage = window.sessionStorage.getItem(USAGE_STORAGE_KEY);
+      const savedDocResult = window.sessionStorage.getItem(DOC_RESULT_STORAGE_KEY);
+
+      if (savedAnalysis) {
+        setAnalysis(JSON.parse(savedAnalysis));
+      }
+      if (savedUsage) {
+        setUsage(JSON.parse(savedUsage));
+      }
+      if (savedDocResult) {
+        setDocResult(JSON.parse(savedDocResult));
+      }
+    } catch {
+      window.sessionStorage.removeItem(ANALYSIS_STORAGE_KEY);
+      window.sessionStorage.removeItem(USAGE_STORAGE_KEY);
+      window.sessionStorage.removeItem(DOC_RESULT_STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (analysis) {
+      window.sessionStorage.setItem(ANALYSIS_STORAGE_KEY, JSON.stringify(analysis));
+    } else {
+      window.sessionStorage.removeItem(ANALYSIS_STORAGE_KEY);
+    }
+  }, [analysis]);
+
+  useEffect(() => {
+    if (usage) {
+      window.sessionStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(usage));
+    } else {
+      window.sessionStorage.removeItem(USAGE_STORAGE_KEY);
+    }
+  }, [usage]);
+
+  useEffect(() => {
+    if (docResult) {
+      window.sessionStorage.setItem(DOC_RESULT_STORAGE_KEY, JSON.stringify(docResult));
+    } else {
+      window.sessionStorage.removeItem(DOC_RESULT_STORAGE_KEY);
+    }
+  }, [docResult]);
 
   useEffect(() => {
     async function checkGoogleAuth() {
