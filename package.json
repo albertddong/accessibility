@@ -1,0 +1,11 @@
+{
+  "name": "accessibility-rem",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:backend": "./venv/bin/python -m backend",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "install:frontend": "npm --prefix frontend install"
+  }
+}
