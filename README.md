@@ -45,6 +45,7 @@ The UI follows the `agents/glassmorphism-SKILL.md` visual direction:
 
 ```text
 accessibility-rem/
+├── Dockerfile
 ├── backend/
 │   ├── main.py
 │   ├── config.py
@@ -62,7 +63,7 @@ accessibility-rem/
 │       ├── main.jsx
 │       └── styles.css
 ├── requirements.txt
-├── credentials.json
+├── credentials.json        # optional local fallback only
 └── .env
 ```
 
@@ -86,6 +87,9 @@ Optional environment variables:
 
 ```bash
 ANTHROPIC_MODEL=claude-sonnet-4-20250514
+GOOGLE_OAUTH_CLIENT_CONFIG_JSON=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 GOOGLE_CREDENTIALS_PATH=credentials.json
 FRONTEND_ORIGIN=http://localhost:5173
 FRONTEND_POST_AUTH_URL=http://localhost:5173
@@ -175,12 +179,68 @@ PUBLIC_BACKEND_URL=https://your-backend-domain
 SESSION_COOKIE_SECURE=true
 SESSION_SAME_SITE=none
 ALLOW_INSECURE_OAUTH_TRANSPORT=false
+GOOGLE_CLIENT_ID=your-google-web-client-id
+GOOGLE_CLIENT_SECRET=your-google-web-client-secret
 ```
 
 Notes:
 
 - the current session/token store is in-memory, so users will need to reconnect Google after a backend restart or redeploy
 - for a serious production deployment, move session/token storage to a persistent store
+- for Cloud Run or other hosted environments, prefer `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` or `GOOGLE_OAUTH_CLIENT_CONFIG_JSON` instead of shipping `credentials.json`
+
+## Cloud Run Deployment
+
+The backend is now container-ready via the root `Dockerfile`.
+
+### 1. Create Google OAuth web credentials
+
+In Google Cloud Console:
+
+- create an OAuth client of type `Web application`
+- add this authorized redirect URI:
+
+```text
+https://YOUR-CLOUD-RUN-URL/api/google-auth/callback
+```
+
+### 2. Deploy the backend to Cloud Run
+
+From the repo root:
+
+```bash
+gcloud run deploy accessibility-rem-backend \
+  --source . \
+  --region us-east1 \
+  --allow-unauthenticated
+```
+
+Set these environment variables in Cloud Run:
+
+```bash
+ANTHROPIC_API_KEY=...
+ANTHROPIC_MODEL=claude-sonnet-4-20250514
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+FRONTEND_ORIGIN=https://your-frontend-domain
+FRONTEND_POST_AUTH_URL=https://your-frontend-domain
+PUBLIC_BACKEND_URL=https://your-cloud-run-url
+SESSION_SECRET=long-random-secret
+SESSION_COOKIE_SECURE=true
+SESSION_SAME_SITE=none
+ALLOW_INSECURE_OAUTH_TRANSPORT=false
+```
+
+### 3. Deploy the frontend
+
+Recommended frontend setup:
+
+- deploy `frontend/` to Vercel
+- set:
+
+```bash
+VITE_API_BASE_URL=https://your-cloud-run-url
+```
 
 ## Migration Status
 

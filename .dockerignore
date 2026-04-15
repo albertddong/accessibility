@@ -1,0 +1,11 @@
+.git
+.gitignore
+.DS_Store
+.env
+venv/
+frontend/
+testing/
+tokens/
+token.pickle
+credentials.json
+node_modules/

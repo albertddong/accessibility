@@ -2,6 +2,7 @@ import json
 import os
 import secrets
 from urllib.parse import urlencode
+from typing import Any
 
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -27,9 +28,33 @@ def _redirect_uri() -> str:
     return f"{settings.public_backend_url.rstrip('/')}/api/google-auth/callback"
 
 
+def _oauth_client_config() -> dict[str, Any]:
+    if settings.google_oauth_client_config_json:
+        return json.loads(settings.google_oauth_client_config_json)
+
+    if settings.google_client_id and settings.google_client_secret:
+        return {
+            "web": {
+                "client_id": settings.google_client_id,
+                "client_secret": settings.google_client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        }
+
+    if settings.google_credentials_path.exists():
+        with open(settings.google_credentials_path, "r", encoding="utf-8") as credentials_file:
+            return json.load(credentials_file)
+
+    raise ValueError(
+        "Google OAuth client configuration not found. Set GOOGLE_OAUTH_CLIENT_CONFIG_JSON "
+        "or GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET, or provide credentials.json."
+    )
+
+
 def _build_flow(state: str | None = None) -> Flow:
-    flow = Flow.from_client_secrets_file(
-        str(settings.google_credentials_path),
+    flow = Flow.from_client_config(
+        _oauth_client_config(),
         scopes=SCOPES,
         state=state,
     )
@@ -46,7 +71,7 @@ def ensure_session_id(session: dict) -> str:
 
 
 def begin_google_oauth(session: dict) -> str | None:
-    if not settings.google_credentials_path.exists():
+    if not settings.has_google_oauth_config():
         return None
 
     flow = _build_flow()
