@@ -264,39 +264,41 @@ function App() {
           </p>
 
           <div className="action-stack">
-            <div className="action-row">
-              <div className="google-status-row">
-                <span className={`status-dot ${isGoogleConnected ? "" : "status-dot-pending"}`} aria-hidden="true" />
-                <span className="google-status-copy">
-                  {isCheckingGoogleAuth
-                    ? "Checking Google connection..."
-                    : isGoogleConnected
-                      ? "Google account connected"
-                      : "Google account not connected"}
-                </span>
+            {!docResult && !isCreatingDoc ? (
+              <div className="action-row">
+                <div className="google-status-row">
+                  <span className={`status-dot ${isGoogleConnected ? "" : "status-dot-pending"}`} aria-hidden="true" />
+                  <span className="google-status-copy">
+                    {isCheckingGoogleAuth
+                      ? "Checking Google connection..."
+                      : isGoogleConnected
+                        ? "Google account connected"
+                        : "Google account not connected"}
+                  </span>
+                </div>
+
+                {!isGoogleConnected && !isCheckingGoogleAuth ? (
+                  <button
+                    className="secondary-button action-button"
+                    type="button"
+                    onClick={handleConnectGoogle}
+                  >
+                    Connect Google
+                  </button>
+                ) : null}
+
+                {isGoogleConnected ? (
+                  <button
+                    className="secondary-button action-button"
+                    type="button"
+                    disabled={!analysis}
+                    onClick={handleCreateGoogleDoc}
+                  >
+                    Create Google Doc
+                  </button>
+                ) : null}
               </div>
-
-              {!isGoogleConnected && !isCheckingGoogleAuth ? (
-                <button
-                  className="secondary-button action-button"
-                  type="button"
-                  onClick={handleConnectGoogle}
-                >
-                  Connect Google
-                </button>
-              ) : null}
-
-              {isGoogleConnected && !isCreatingDoc && !docResult ? (
-                <button
-                  className="secondary-button action-button"
-                  type="button"
-                  disabled={!analysis}
-                  onClick={handleCreateGoogleDoc}
-                >
-                  Create Google Doc
-                </button>
-              ) : null}
-            </div>
+            ) : null}
 
             {isCreatingDoc ? (
               <div className="doc-result">
