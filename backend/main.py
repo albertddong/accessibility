@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import RedirectResponse
+from urllib.parse import urlunsplit
 
 from backend.config import settings
 from backend.schemas import CreateGoogleDocRequest, CreateGoogleDocResponse
@@ -55,7 +56,16 @@ def google_auth_start(request: Request):
 @app.get("/api/google-auth/callback")
 def google_auth_callback(request: Request):
     try:
-        complete_google_oauth(request.session, str(request.url))
+        authorization_response = urlunsplit(
+            (
+                settings.public_backend_url.split("://", 1)[0],
+                settings.public_backend_url.split("://", 1)[1].rstrip("/"),
+                request.url.path,
+                request.url.query,
+                "",
+            )
+        )
+        complete_google_oauth(request.session, authorization_response)
         return RedirectResponse(build_post_auth_redirect(True))
     except Exception as exc:
         return RedirectResponse(build_post_auth_redirect(False, str(exc)))
